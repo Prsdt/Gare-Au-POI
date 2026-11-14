@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gare_au_poi"
+version = "0.1.0"
+description = "SNCF GTFS Graph Pathfinding & Multimodal Gare-Au-POI Journey Planner"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+where = ["src"]
