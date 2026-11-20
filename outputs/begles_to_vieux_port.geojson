@@ -1,0 +1,487 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -0.555357,
+            44.799319
+          ],
+          [
+            -0.556697,
+            44.825873
+          ]
+        ]
+      },
+      "properties": {
+        "mode": "rail",
+        "from": "Bègles",
+        "to": "Bordeaux Saint-Jean",
+        "departure": "07:50",
+        "arrival": "07:54",
+        "route": "F44 (44. Bordeaux - Langon - Marmande - Agen)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -0.556697,
+            44.825873
+          ],
+          [
+            0.168091,
+            44.503071
+          ]
+        ]
+      },
+      "properties": {
+        "mode": "rail",
+        "from": "Bordeaux Saint-Jean",
+        "to": "Marmande",
+        "departure": "08:07",
+        "arrival": "08:54",
+        "route": "180A (Bordeaux - Marseille)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            0.168091,
+            44.503071
+          ],
+          [
+            1.341499,
+            44.01444
+          ]
+        ]
+      },
+      "properties": {
+        "mode": "rail",
+        "from": "Marmande",
+        "to": "Montauban Ville Bourbon",
+        "departure": "08:56",
+        "arrival": "09:59",
+        "route": "180A (Bordeaux - Marseille)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            1.341499,
+            44.01444
+          ],
+          [
+            1.453616,
+            43.611206
+          ]
+        ]
+      },
+      "properties": {
+        "mode": "rail",
+        "from": "Montauban Ville Bourbon",
+        "to": "Toulouse Matabiau",
+        "departure": "10:01",
+        "arrival": "10:38",
+        "route": "180A (Bordeaux - Marseille)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            1.453616,
+            43.611206
+          ],
+          [
+            2.351824,
+            43.218029
+          ]
+        ]
+      },
+      "properties": {
+        "mode": "rail",
+        "from": "Toulouse Matabiau",
+        "to": "Carcassonne",
+        "departure": "10:44",
+        "arrival": "11:26",
+        "route": "180A (Bordeaux - Marseille)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            2.351824,
+            43.218029
+          ],
+          [
+            3.005667,
+            43.190618
+          ]
+        ]
+      },
+      "properties": {
+        "mode": "rail",
+        "from": "Carcassonne",
+        "to": "Narbonne",
+        "departure": "11:29",
+        "arrival": "11:58",
+        "route": "180A (Bordeaux - Marseille)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            3.005667,
+            43.190618
+          ],
+          [
+            3.696571,
+            43.412641
+          ]
+        ]
+      },
+      "properties": {
+        "mode": "rail",
+        "from": "Narbonne",
+        "to": "Sète",
+        "departure": "12:01",
+        "arrival": "12:35",
+        "route": "180A (Bordeaux - Marseille)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            3.696571,
+            43.412641
+          ],
+          [
+            3.880674,
+            43.604738
+          ]
+        ]
+      },
+      "properties": {
+        "mode": "rail",
+        "from": "Sète",
+        "to": "Montpellier Saint-Roch",
+        "departure": "12:38",
+        "arrival": "12:54",
+        "route": "180A (Bordeaux - Marseille)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            3.880674,
+            43.604738
+          ],
+          [
+            4.365872,
+            43.832313
+          ]
+        ]
+      },
+      "properties": {
+        "mode": "rail",
+        "from": "Montpellier Saint-Roch",
+        "to": "Nîmes Centre",
+        "departure": "12:58",
+        "arrival": "13:22",
+        "route": "180A (Bordeaux - Marseille)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            4.365872,
+            43.832313
+          ],
+          [
+            4.632105,
+            43.684863
+          ]
+        ]
+      },
+      "properties": {
+        "mode": "rail",
+        "from": "Nîmes Centre",
+        "to": "Arles",
+        "departure": "13:26",
+        "arrival": "13:47",
+        "route": "180A (Bordeaux - Marseille)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            4.632105,
+            43.684863
+          ],
+          [
+            5.380407,
+            43.302666
+          ]
+        ]
+      },
+      "properties": {
+        "mode": "rail",
+        "from": "Arles",
+        "to": "Marseille Saint-Charles",
+        "departure": "13:49",
+        "arrival": "14:36",
+        "route": "180A (Bordeaux - Marseille)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            5.380407,
+            43.302666
+          ],
+          [
+            5.3744,
+            43.2951
+          ]
+        ]
+      },
+      "properties": {
+        "mode": "walk",
+        "from": "Marseille Saint-Charles",
+        "to": "Vieux-Port de Marseille",
+        "distance_km": 0.97,
+        "duration_min": 11
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.555357,
+          44.799319
+        ]
+      },
+      "properties": {
+        "name": "Bègles",
+        "role": "origin",
+        "detail": "Depart 07:50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.556697,
+          44.825873
+        ]
+      },
+      "properties": {
+        "name": "Bordeaux Saint-Jean",
+        "role": "transfer",
+        "detail": "Arrive 07:54 | Next dep 08:07"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.168091,
+          44.503071
+        ]
+      },
+      "properties": {
+        "name": "Marmande",
+        "role": "stop",
+        "detail": "Arrive 08:54 | Next dep 08:56"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.341499,
+          44.01444
+        ]
+      },
+      "properties": {
+        "name": "Montauban Ville Bourbon",
+        "role": "stop",
+        "detail": "Arrive 09:59 | Next dep 10:01"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.453616,
+          43.611206
+        ]
+      },
+      "properties": {
+        "name": "Toulouse Matabiau",
+        "role": "stop",
+        "detail": "Arrive 10:38 | Next dep 10:44"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.351824,
+          43.218029
+        ]
+      },
+      "properties": {
+        "name": "Carcassonne",
+        "role": "stop",
+        "detail": "Arrive 11:26 | Next dep 11:29"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3.005667,
+          43.190618
+        ]
+      },
+      "properties": {
+        "name": "Narbonne",
+        "role": "stop",
+        "detail": "Arrive 11:58 | Next dep 12:01"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3.696571,
+          43.412641
+        ]
+      },
+      "properties": {
+        "name": "Sète",
+        "role": "stop",
+        "detail": "Arrive 12:35 | Next dep 12:38"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3.880674,
+          43.604738
+        ]
+      },
+      "properties": {
+        "name": "Montpellier Saint-Roch",
+        "role": "stop",
+        "detail": "Arrive 12:54 | Next dep 12:58"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.365872,
+          43.832313
+        ]
+      },
+      "properties": {
+        "name": "Nîmes Centre",
+        "role": "stop",
+        "detail": "Arrive 13:22 | Next dep 13:26"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.632105,
+          43.684863
+        ]
+      },
+      "properties": {
+        "name": "Arles",
+        "role": "stop",
+        "detail": "Arrive 13:47 | Next dep 13:49"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          5.380407,
+          43.302666
+        ]
+      },
+      "properties": {
+        "name": "Marseille Saint-Charles",
+        "role": "arrival_station",
+        "detail": "Arrive 14:36"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          5.3744,
+          43.2951
+        ]
+      },
+      "properties": {
+        "name": "Vieux-Port de Marseille",
+        "role": "poi",
+        "detail": "Reach POI at 14:47"
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import heapq
-from gare_au_poi.graph import RailwayGraph
-from gare_au_poi.traversal import bfs_path, calculate_path_duration, reconstruct_path
+from app.engine.graph import RailwayGraph
+from app.engine.traversal import bfs_path, calculate_path_duration, reconstruct_path
 
 
 def dijkstra_shortest_path(

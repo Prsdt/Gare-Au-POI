@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Bègles → Vieux-Port de Marseille (2026-12-21)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+    #map { height: 100vh; width: 100vw; }
+    .legend {
+      background: white; padding: 12px 16px; border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2); line-height: 1.6; font-size: 13px;
+    }
+    .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const geojsonData = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[-0.555357, 44.799319], [-0.556697, 44.825873]]}, "properties": {"mode": "rail", "from": "Bègles", "to": "Bordeaux Saint-Jean", "departure": "07:50", "arrival": "07:54", "route": "F44 (44. Bordeaux - Langon - Marmande - Agen)"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[-0.556697, 44.825873], [0.168091, 44.503071]]}, "properties": {"mode": "rail", "from": "Bordeaux Saint-Jean", "to": "Marmande", "departure": "08:07", "arrival": "08:54", "route": "180A (Bordeaux - Marseille)"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[0.168091, 44.503071], [1.341499, 44.01444]]}, "properties": {"mode": "rail", "from": "Marmande", "to": "Montauban Ville Bourbon", "departure": "08:56", "arrival": "09:59", "route": "180A (Bordeaux - Marseille)"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[1.341499, 44.01444], [1.453616, 43.611206]]}, "properties": {"mode": "rail", "from": "Montauban Ville Bourbon", "to": "Toulouse Matabiau", "departure": "10:01", "arrival": "10:38", "route": "180A (Bordeaux - Marseille)"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[1.453616, 43.611206], [2.351824, 43.218029]]}, "properties": {"mode": "rail", "from": "Toulouse Matabiau", "to": "Carcassonne", "departure": "10:44", "arrival": "11:26", "route": "180A (Bordeaux - Marseille)"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[2.351824, 43.218029], [3.005667, 43.190618]]}, "properties": {"mode": "rail", "from": "Carcassonne", "to": "Narbonne", "departure": "11:29", "arrival": "11:58", "route": "180A (Bordeaux - Marseille)"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[3.005667, 43.190618], [3.696571, 43.412641]]}, "properties": {"mode": "rail", "from": "Narbonne", "to": "Sète", "departure": "12:01", "arrival": "12:35", "route": "180A (Bordeaux - Marseille)"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[3.696571, 43.412641], [3.880674, 43.604738]]}, "properties": {"mode": "rail", "from": "Sète", "to": "Montpellier Saint-Roch", "departure": "12:38", "arrival": "12:54", "route": "180A (Bordeaux - Marseille)"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[3.880674, 43.604738], [4.365872, 43.832313]]}, "properties": {"mode": "rail", "from": "Montpellier Saint-Roch", "to": "Nîmes Centre", "departure": "12:58", "arrival": "13:22", "route": "180A (Bordeaux - Marseille)"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[4.365872, 43.832313], [4.632105, 43.684863]]}, "properties": {"mode": "rail", "from": "Nîmes Centre", "to": "Arles", "departure": "13:26", "arrival": "13:47", "route": "180A (Bordeaux - Marseille)"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[4.632105, 43.684863], [5.380407, 43.302666]]}, "properties": {"mode": "rail", "from": "Arles", "to": "Marseille Saint-Charles", "departure": "13:49", "arrival": "14:36", "route": "180A (Bordeaux - Marseille)"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[5.380407, 43.302666], [5.3744, 43.2951]]}, "properties": {"mode": "walk", "from": "Marseille Saint-Charles", "to": "Vieux-Port de Marseille", "distance_km": 0.97, "duration_min": 11}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-0.555357, 44.799319]}, "properties": {"name": "Bègles", "role": "origin", "detail": "Depart 07:50"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-0.556697, 44.825873]}, "properties": {"name": "Bordeaux Saint-Jean", "role": "transfer", "detail": "Arrive 07:54 | Next dep 08:07"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [0.168091, 44.503071]}, "properties": {"name": "Marmande", "role": "stop", "detail": "Arrive 08:54 | Next dep 08:56"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [1.341499, 44.01444]}, "properties": {"name": "Montauban Ville Bourbon", "role": "stop", "detail": "Arrive 09:59 | Next dep 10:01"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [1.453616, 43.611206]}, "properties": {"name": "Toulouse Matabiau", "role": "stop", "detail": "Arrive 10:38 | Next dep 10:44"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [2.351824, 43.218029]}, "properties": {"name": "Carcassonne", "role": "stop", "detail": "Arrive 11:26 | Next dep 11:29"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [3.005667, 43.190618]}, "properties": {"name": "Narbonne", "role": "stop", "detail": "Arrive 11:58 | Next dep 12:01"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [3.696571, 43.412641]}, "properties": {"name": "Sète", "role": "stop", "detail": "Arrive 12:35 | Next dep 12:38"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [3.880674, 43.604738]}, "properties": {"name": "Montpellier Saint-Roch", "role": "stop", "detail": "Arrive 12:54 | Next dep 12:58"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [4.365872, 43.832313]}, "properties": {"name": "Nîmes Centre", "role": "stop", "detail": "Arrive 13:22 | Next dep 13:26"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [4.632105, 43.684863]}, "properties": {"name": "Arles", "role": "stop", "detail": "Arrive 13:47 | Next dep 13:49"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [5.380407, 43.302666]}, "properties": {"name": "Marseille Saint-Charles", "role": "arrival_station", "detail": "Arrive 14:36"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [5.3744, 43.2951]}, "properties": {"name": "Vieux-Port de Marseille", "role": "poi", "detail": "Reach POI at 14:47"}}]};
+    const map = L.map('map').setView([46.6, 2.2], 6);
+
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, HERE, Garmin, USGS, Intermap, INCREMENT P, NRCan, Esri Japan, METI, Esri China (Hong Kong), Esri Korea, Esri (Thailand), NGCC, (c) OpenStreetMap contributors, and the GIS User Community',
+      maxZoom: 19
+    }).addTo(map);
+
+    const roleColors = {
+      origin: '#16a34a',
+      transfer: '#ea580c',
+      stop: '#2563eb',
+      arrival_station: '#7c3aed',
+      poi: '#dc2626'
+    };
+
+    const layer = L.geoJSON(geojsonData, {
+      style: function(feature) {
+        if (feature.properties.mode === 'walk') {
+          return { color: '#dc2626', weight: 4, dashArray: '6, 8' };
+        }
+        return { color: '#2563eb', weight: 4, opacity: 0.85 };
+      },
+      pointToLayer: function(feature, latlng) {
+        const role = feature.properties.role;
+        const radius = (role === 'origin' || role === 'poi' || role === 'transfer') ? 8 : 5;
+        return L.circleMarker(latlng, {
+          radius: radius,
+          fillColor: roleColors[role] || '#2563eb',
+          color: '#ffffff',
+          weight: 2,
+          fillOpacity: 0.95
+        });
+      },
+      onEachFeature: function(feature, lyr) {
+        const p = feature.properties;
+        if (feature.geometry.type === 'Point') {
+          lyr.bindPopup(`<b>${p.name}</b><br/>Role: ${p.role}<br/>${p.detail}`);
+        } else if (p.mode === 'rail') {
+          lyr.bindPopup(`<b>${p.from} &rarr; ${p.to}</b><br/>${p.departure} - ${p.arrival}<br/>Line: ${p.route}`);
+        } else if (p.mode === 'walk') {
+          lyr.bindPopup(`<b>Last-Mile Walk</b><br/>${p.from} &rarr; ${p.to}<br/>${p.distance_km} km (~${p.duration_min} min)`);
+        }
+      }
+    }).addTo(map);
+
+    map.fitBounds(layer.getBounds(), { padding: [40, 40] });
+
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function() {
+      const div = L.DomUtil.create('div', 'legend');
+      div.innerHTML = `
+        <b>Bègles → Vieux-Port de Marseille (2026-12-21)</b><br/>
+        <span class="dot" style="background:#16a34a"></span>Origin Station<br/>
+        <span class="dot" style="background:#ea580c"></span>Transfer Station<br/>
+        <span class="dot" style="background:#2563eb"></span>Intermediate Stop / Rail<br/>
+        <span class="dot" style="background:#7c3aed"></span>Arrival Station<br/>
+        <span class="dot" style="background:#dc2626"></span>Destination POI &amp; Walk
+      `;
+      return div;
+    };
+    legend.addTo(map);
+  </script>
+</body>
+</html>

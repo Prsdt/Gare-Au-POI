@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gare-Au-POI — Planificateur Multimodal SNCF</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <header>
+        <h1>🚆 Gare-Au-POI</h1>
+        <p>Itinéraires ferroviaires multimodaux &amp; touristiques</p>
+      </header>
+
+      <form id="route-form">
+        <div class="field">
+          <label>1. Votre point de départ</label>
+          <div class="row">
+            <button type="button" id="gps-btn" class="secondary">📍 Ma position GPS</button>
+            <button type="button" id="pick-origin-map-btn" class="secondary">🗺️ Cliquer sur carte</button>
+          </div>
+          <div id="custom-origin-badge" class="badge hidden"></div>
+          <input type="text" id="station-search" placeholder="Ou rechercher une gare (ex: Bordeaux, Bègles)..." autocomplete="off" />
+          <select id="station-select" size="4"></select>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="travel-date">Date</label>
+            <input type="date" id="travel-date" value="2026-12-21" min="2026-11-09" max="2027-04-30" />
+          </div>
+          <div class="field">
+            <label for="dep-time">Départ dès</label>
+            <input type="time" id="dep-time" value="07:30" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="criterion">Critère d'optimisation</label>
+          <select id="criterion">
+            <option value="fastest">⚡ Temps de trajet le plus court</option>
+            <option value="fewest_transfers">🔄 Minimum de correspondances</option>
+            <option value="lowest_co2">🌱 Empreinte carbone minimale (CO₂)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>2. Où voulez-vous aller ? (POI / Destinations)</label>
+          <div class="row">
+            <select id="poi-catalog"></select>
+            <button type="button" id="add-poi-btn" class="secondary">+ Ajouter</button>
+          </div>
+          <small class="hint">Cliquez n'importe où sur la carte pour ajouter votre destination (ou point de départ si le mode carte est actif).</small>
+          <ul id="selected-pois" class="poi-list"></ul>
+        </div>
+
+        <button type="submit" id="submit-btn" class="primary">Calculer l'itinéraire</button>
+      </form>
+
+      <div id="status-msg" class="status"></div>
+      <section id="results" class="results hidden"></section>
+    </aside>
+
+    <main id="map"></main>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

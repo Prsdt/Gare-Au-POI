@@ -1,7 +1,7 @@
 import unittest
-from gare_au_poi.astar import astar_with_stats, dijkstra_with_stats, haversine_km
-from gare_au_poi.graph import RailwayGraph, Station, parse_gtfs_time_to_seconds
-from gare_au_poi.traversal import bfs_path, dfs_path
+from app.engine.astar import astar_with_stats, dijkstra_with_stats, haversine_km
+from app.engine.graph import RailwayGraph, Station, parse_gtfs_time_to_seconds
+from app.engine.traversal import bfs_path, dfs_path
 
 
 class TestGareAuPOI(unittest.TestCase):

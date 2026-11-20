@@ -1,7 +1,7 @@
 import heapq
 import math
-from gare_au_poi.graph import RailwayGraph
-from gare_au_poi.traversal import reconstruct_path
+from app.engine.graph import RailwayGraph
+from app.engine.traversal import reconstruct_path
 
 # Max TGV commercial speed in km/h (used to keep heuristic admissible: never overestimates)
 MAX_TRAIN_SPEED_KMH = 320.0

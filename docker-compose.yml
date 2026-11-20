@@ -1,0 +1,16 @@
+services:
+  backend:
+    build: ./backend
+    container_name: gare-au-poi-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./DATA:/data:ro
+
+  frontend:
+    build: ./frontend
+    container_name: gare-au-poi-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend

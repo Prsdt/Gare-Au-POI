@@ -3,7 +3,7 @@ import heapq
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from gare_au_poi.graph import Station, parse_gtfs_time_to_seconds
+from app.engine.graph import Station, parse_gtfs_time_to_seconds
 
 MIN_TRANSFER_SECONDS = 10 * 60  # 10 minutes minimum connection when changing trains
 

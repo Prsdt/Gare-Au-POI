@@ -1,5 +1,5 @@
 from collections import deque
-from gare_au_poi.graph import RailwayGraph
+from app.engine.graph import RailwayGraph
 
 
 def reconstruct_path(came_from: dict[str, str | None], goal_id: str) -> list[str]:

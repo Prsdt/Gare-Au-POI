@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from gare_au_poi.astar import haversine_km
-from gare_au_poi.graph import Station, parse_gtfs_time_to_seconds
-from gare_au_poi.timetable_router import (
+from app.engine.astar import haversine_km
+from app.engine.graph import Station
+from app.engine.timetable_router import (
     TimeDependentRailway,
     TimetableEdge,
     format_seconds_to_hhmm,
@@ -17,13 +17,21 @@ class PointOfInterest:
     lon: float
 
 
+@dataclass(frozen=True)
+class MultimodalPlan:
+    origin: Station
+    dest_station: Station
+    poi: PointOfInterest
+    walk_km: float
+    walk_sec: int
+    legs: list[tuple[str, TimetableEdge]]
+    poi_arrival_sec: int
+
+
 def find_nearest_stations(
     stations: dict[str, Station], lat: float, lon: float, top_k: int = 3
 ) -> list[tuple[Station, float, int]]:
-    """
-    Find the top_k closest stations to (lat, lon).
-    Returns a list of (Station, distance_km, walking_seconds).
-    """
+    """Find the top_k closest stations to (lat, lon)."""
     scored: list[tuple[Station, float, int]] = []
     for st in stations.values():
         dist_km = haversine_km(lat, lon, st.lat, st.lon)
@@ -34,26 +42,25 @@ def find_nearest_stations(
     return scored[:top_k]
 
 
-def plan_trip_to_poi(
+def compute_trip_to_poi(
     network: TimeDependentRailway,
     origin_station_name: str,
     poi: PointOfInterest,
     departure_time_str: str,
-) -> None:
+) -> MultimodalPlan | None:
+    """Compute the earliest-arrival multimodal itinerary from origin station to POI."""
     origin = next(
         (s for s in network.stations.values() if origin_station_name.lower() in s.name.lower()),
         None,
     )
     if origin is None:
-        print(f"Origin station '{origin_station_name}' not found.")
-        return
+        return None
 
     nearby_stations = find_nearest_stations(network.stations, poi.lat, poi.lon, top_k=3)
 
     best_total_arrival_sec: int | None = None
-    best_plan: tuple[Station, float, int, list[tuple[str, TimetableEdge]]] | None = None
+    best_plan: MultimodalPlan | None = None
 
-    # Evaluate routing to each of the 3 nearest stations + walking to POI
     for dest_station, dist_km, walk_sec in nearby_stations:
         legs = network.find_earliest_arrival(
             origin.station_id, dest_station.station_id, departure_time_str
@@ -66,31 +73,47 @@ def plan_trip_to_poi(
 
         if best_total_arrival_sec is None or poi_arrival_sec < best_total_arrival_sec:
             best_total_arrival_sec = poi_arrival_sec
-            best_plan = (dest_station, dist_km, walk_sec, legs)
+            best_plan = MultimodalPlan(
+                origin=origin,
+                dest_station=dest_station,
+                poi=poi,
+                walk_km=dist_km,
+                walk_sec=walk_sec,
+                legs=legs,
+                poi_arrival_sec=poi_arrival_sec,
+            )
 
+    return best_plan
+
+
+def plan_trip_to_poi(
+    network: TimeDependentRailway,
+    origin_station_name: str,
+    poi: PointOfInterest,
+    departure_time_str: str,
+) -> MultimodalPlan | None:
+    plan = compute_trip_to_poi(network, origin_station_name, poi, departure_time_str)
     print("=================================================================")
-    print(f"GARE-AU-POI PLANNER: {origin.name}  --->  {poi.name}")
+    print(f"GARE-AU-POI PLANNER: {origin_station_name}  --->  {poi.name}")
     print(f"Date: {network.target_date} | Earliest Departure: {departure_time_str}")
     print("=================================================================")
 
-    if best_plan is None or best_total_arrival_sec is None:
+    if plan is None:
         print("No multimodal route found.")
-        return
+        return None
 
-    dest_station, dist_km, walk_sec, legs = best_plan
-    first_dep_sec = legs[0][1].dep_sec
-    total_minutes = (best_total_arrival_sec - first_dep_sec) / 60.0
+    first_dep_sec = plan.legs[0][1].dep_sec
+    total_minutes = (plan.poi_arrival_sec - first_dep_sec) / 60.0
 
     print(
-        f"Board at:  {format_seconds_to_hhmm(first_dep_sec)} ({origin.name})\n"
-        f"Reach POI: {format_seconds_to_hhmm(best_total_arrival_sec)} ({poi.name}) "
+        f"Board at:  {format_seconds_to_hhmm(first_dep_sec)} ({plan.origin.name})\n"
+        f"Reach POI: {format_seconds_to_hhmm(plan.poi_arrival_sec)} ({plan.poi.name}) "
         f"| Total Time: {total_minutes:.0f} min\n"
     )
 
-    # Summarize contiguous train segments (grouping consecutive stops on the same trip)
     print("1. Rail Journey:")
     current_trip: str | None = None
-    for idx, (from_id, edge) in enumerate(legs):
+    for idx, (from_id, edge) in enumerate(plan.legs):
         from_name = network.stations[from_id].name
         to_name = network.stations[edge.to_station_id].name
         if edge.trip_id != current_trip:
@@ -104,19 +127,8 @@ def plan_trip_to_poi(
 
     print(
         f"\n2. Last-Mile Walk:\n"
-        f"   Walk {dist_km:.2f} km (~{walk_sec // 60} min) from {dest_station.name} to {poi.name}"
+        f"   Walk {plan.walk_km:.2f} km (~{plan.walk_sec // 60} min) "
+        f"from {plan.dest_station.name} to {plan.poi.name}"
     )
     print("=================================================================\n")
-
-
-if __name__ == "__main__":
-    DATE = "20261221"
-    td_network = TimeDependentRailway.for_date(DATE, "DATA")
-
-    # Example 1: Bègles -> Vieux-Port de Marseille (requires TER -> Intercités transfer at Bordeaux!)
-    vieux_port = PointOfInterest("Vieux-Port de Marseille", lat=43.2951, lon=5.3744)
-    plan_trip_to_poi(td_network, "Bègles", vieux_port, "07:30:00")
-
-    # Example 2: Bordeaux Saint-Jean -> Tour Eiffel (Paris)
-    tour_eiffel = PointOfInterest("Tour Eiffel (Paris)", lat=48.8584, lon=2.2945)
-    plan_trip_to_poi(td_network, "Bordeaux Saint-Jean", tour_eiffel, "08:00:00")
+    return plan
