@@ -4,68 +4,92 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gare-Au-POI — Planificateur Multimodal SNCF</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="layout">
-    <aside class="sidebar">
-      <header>
-        <h1>🚆 Gare-Au-POI</h1>
-        <p>Itinéraires ferroviaires multimodaux &amp; touristiques</p>
-      </header>
+  <!-- Full-bleed interactive map -->
+  <main id="map"></main>
 
-      <form id="route-form">
-        <div class="field">
-          <label>1. Votre point de départ</label>
-          <div class="row">
-            <button type="button" id="gps-btn" class="secondary">📍 Ma position GPS</button>
-            <button type="button" id="pick-origin-map-btn" class="secondary">🗺️ Cliquer sur carte</button>
-          </div>
-          <div id="custom-origin-badge" class="badge hidden"></div>
-          <input type="text" id="station-search" placeholder="Ou rechercher une gare (ex: Bordeaux, Bègles)..." autocomplete="off" />
-          <select id="station-select" size="4"></select>
+  <!-- Floating Top Navigation Bar -->
+  <nav class="top-nav">
+    <div class="brand">
+      <div class="brand-icon">🚆</div>
+      <div>
+        <span class="brand-title">Gare-Au-POI</span>
+        <span class="brand-sub">SNCF Multimodal &amp; Éco-Mobilité</span>
+      </div>
+    </div>
+
+    <div class="nav-tabs" id="criterion-tabs">
+      <button type="button" class="nav-tab active" data-val="fastest">⚡ Plus rapide</button>
+      <button type="button" class="nav-tab" data-val="fewest_transfers">🔄 Moins de correspondances</button>
+      <button type="button" class="nav-tab" data-val="lowest_co2">🌱 Bas Carbone (CO₂)</button>
+    </div>
+
+    <div class="nav-status">
+      <span class="pulse-dot"></span> GTFS SNCF Actif
+    </div>
+  </nav>
+
+  <!-- Floating Left Control Card -->
+  <aside class="floating-panel left-panel">
+    <form id="route-form">
+      <div class="panel-section">
+        <div class="section-header">
+          <span class="step-pill purple">1</span>
+          <label>Point de départ</label>
         </div>
 
-        <div class="row">
-          <div class="field">
-            <label for="travel-date">Date</label>
-            <input type="date" id="travel-date" value="2026-12-21" min="2026-11-09" max="2027-04-30" />
-          </div>
-          <div class="field">
-            <label for="dep-time">Départ dès</label>
-            <input type="time" id="dep-time" value="07:30" />
-          </div>
+        <div class="btn-group">
+          <button type="button" id="gps-btn" class="chip-btn">📍 Mon GPS</button>
+          <button type="button" id="pick-origin-map-btn" class="chip-btn">🗺️ Sur la carte</button>
         </div>
 
-        <div class="field">
-          <label for="criterion">Critère d'optimisation</label>
-          <select id="criterion">
-            <option value="fastest">⚡ Temps de trajet le plus court</option>
-            <option value="fewest_transfers">🔄 Minimum de correspondances</option>
-            <option value="lowest_co2">🌱 Empreinte carbone minimale (CO₂)</option>
-          </select>
+        <div id="custom-origin-badge" class="origin-pill hidden"></div>
+
+        <input type="text" id="station-search" class="modern-input" placeholder="Rechercher une gare (ex: Bordeaux, Paris)..." autocomplete="off" />
+        <select id="station-select" class="modern-select list-box" size="3"></select>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel-section">
+          <label for="travel-date">Date</label>
+          <input type="date" id="travel-date" class="modern-input" value="2026-12-21" min="2026-11-09" max="2027-04-30" />
+        </div>
+        <div class="panel-section">
+          <label for="dep-time">Départ dès</label>
+          <input type="time" id="dep-time" class="modern-input" value="07:30" />
+        </div>
+      </div>
+
+      <input type="hidden" id="criterion" value="fastest" />
+
+      <div class="panel-section">
+        <div class="section-header">
+          <span class="step-pill coral">2</span>
+          <label>Destinations / Points d'Intérêt</label>
         </div>
 
-        <div class="field">
-          <label>2. Où voulez-vous aller ? (POI / Destinations)</label>
-          <div class="row">
-            <select id="poi-catalog"></select>
-            <button type="button" id="add-poi-btn" class="secondary">+ Ajouter</button>
-          </div>
-          <small class="hint">Cliquez n'importe où sur la carte pour ajouter votre destination (ou point de départ si le mode carte est actif).</small>
-          <ul id="selected-pois" class="poi-list"></ul>
+        <div class="add-row">
+          <select id="poi-catalog" class="modern-select"></select>
+          <button type="button" id="add-poi-btn" class="add-btn">+ Ajouter</button>
         </div>
+        <small class="hint">Astuce : cliquez directement sur la carte pour épingler un POI.</small>
+        <ul id="selected-pois" class="poi-list"></ul>
+      </div>
 
-        <button type="submit" id="submit-btn" class="primary">Calculer l'itinéraire</button>
-      </form>
+      <button type="submit" id="submit-btn" class="cta-btn">Calculer l'itinéraire</button>
+    </form>
 
-      <div id="status-msg" class="status"></div>
-      <section id="results" class="results hidden"></section>
-    </aside>
+    <div id="status-msg" class="status-banner"></div>
+  </aside>
 
-    <main id="map"></main>
-  </div>
+  <!-- Floating Right/Bottom KPI & Timetable Drawer (appears on calculation) -->
+  <section id="results" class="floating-panel right-panel hidden"></section>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="app.js"></script>

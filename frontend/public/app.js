@@ -1,17 +1,19 @@
 ﻿const API_BASE =
   window.location.port === "3000" ? "http://localhost:8000/api" : "/api";
 
-const map = L.map("map").setView([46.6, 2.2], 6);
-L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
+const map = L.map("map", { zoomControl: true }).setView([46.6, 2.2], 6);
+
+// Clean, bright CartoDB Positron map tiles matching the light indigo/white aesthetic
+L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
   attribution: "Tiles &copy; Esri &mdash; OpenStreetMap contributors",
-  maxZoom: 19,
+  maxZoom: 16,
 }).addTo(map);
 
 let routeLayer = null;
 let originPin = null;
 let catalogPOIs = [];
 let selectedPOIs = [];
-let customOrigin = null; // { lat, lon, label }
+let customOrigin = null;
 let pickingOriginOnMap = false;
 
 const stationSearch = document.getElementById("station-search");
@@ -22,18 +24,34 @@ const poiCatalogSelect = document.getElementById("poi-catalog");
 const selectedPoisList = document.getElementById("selected-pois");
 const statusMsg = document.getElementById("status-msg");
 const resultsSection = document.getElementById("results");
+const criterionInput = document.getElementById("criterion");
+
+// Top Navigation Pill Switcher for Optimization Criterion
+document.querySelectorAll(".nav-tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".nav-tab").forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
+    criterionInput.value = tab.dataset.val;
+  });
+});
 
 function setCustomOrigin(lat, lon, label) {
   customOrigin = { lat, lon, label };
   customOriginBadge.classList.remove("hidden");
-  customOriginBadge.innerHTML = `📍 Départ : <b>${label}</b> (${lat.toFixed(4)}, ${lon.toFixed(4)}) <button type="button" id="clear-origin">✕</button>`;
+  customOriginBadge.innerHTML = `<span>📍 <b>${label}</b> (${lat.toFixed(3)}, ${lon.toFixed(3)})</span><button type="button" id="clear-origin">✕</button>`;
   document.getElementById("clear-origin").onclick = () => {
     customOrigin = null;
     customOriginBadge.classList.add("hidden");
     if (originPin) map.removeLayer(originPin);
   };
   if (originPin) map.removeLayer(originPin);
-  originPin = L.marker([lat, lon]).addTo(map).bindPopup(`<b>Départ :</b> ${label}`).openPopup();
+  originPin = L.marker([lat, lon], {
+    icon: L.divIcon({
+      className: "",
+      html: `<div class="map-callout origin"><span class="dot"></span>${label}</div>`,
+      iconAnchor: [20, 14],
+    }),
+  }).addTo(map);
   map.setView([lat, lon], 12);
 }
 
@@ -45,14 +63,14 @@ document.getElementById("gps-btn").addEventListener("click", () => {
   }
   navigator.geolocation.getCurrentPosition(
     (pos) => setCustomOrigin(pos.coords.latitude, pos.coords.longitude, "Ma position GPS"),
-    () => (statusMsg.textContent = "Impossible d'accéder à votre position GPS. Cliquez sur la carte ou choisissez une gare.")
+    () => (statusMsg.textContent = "GPS indisponible. Cliquez sur la carte ou choisissez une gare.")
   );
 });
 
 pickOriginMapBtn.addEventListener("click", () => {
   pickingOriginOnMap = !pickingOriginOnMap;
-  pickOriginMapBtn.style.background = pickingOriginOnMap ? "#bfdbfe" : "#e2e8f0";
-  pickOriginMapBtn.textContent = pickingOriginOnMap ? "🎯 Cliquez sur la carte..." : "🗺️ Cliquer sur carte";
+  pickOriginMapBtn.classList.toggle("active", pickingOriginOnMap);
+  pickOriginMapBtn.textContent = pickingOriginOnMap ? "🎯 Cliquez sur la carte..." : "🗺️ Sur la carte";
 });
 
 async function loadStations(query = "") {
@@ -68,7 +86,7 @@ async function loadStations(query = "") {
     });
     if (stations.length > 0) stationSelect.selectedIndex = 0;
   } catch {
-    statusMsg.textContent = "⚠️ Backend API hors ligne (vérifiez que uvicorn tourne sur le port 8000).";
+    statusMsg.textContent = "⚠️ Backend API hors ligne sur le port 8000.";
   }
 }
 
@@ -88,7 +106,7 @@ async function loadPOICatalog() {
       renderSelectedPOIs();
     }
   } catch {
-    statusMsg.textContent = "⚠️ Impossible de charger les POIs depuis l'API.";
+    statusMsg.textContent = "⚠️ Impossible de charger les POIs.";
   }
 }
 
@@ -96,7 +114,7 @@ function renderSelectedPOIs() {
   selectedPoisList.innerHTML = "";
   selectedPOIs.forEach((poi, idx) => {
     const li = document.createElement("li");
-    li.innerHTML = `<span><b>#${idx + 1}</b> ${poi.name}</span><button type="button" data-idx="${idx}">✕</button>`;
+    li.innerHTML = `<span><span class="poi-tag">POI #${idx + 1}</span>${poi.name}</span><button type="button">✕</button>`;
     li.querySelector("button").addEventListener("click", () => {
       selectedPOIs.splice(idx, 1);
       renderSelectedPOIs();
@@ -116,10 +134,10 @@ document.getElementById("add-poi-btn").addEventListener("click", () => {
 map.on("click", (e) => {
   const { lat, lng } = e.latlng;
   if (pickingOriginOnMap) {
-    setCustomOrigin(lat, lng, `Point de départ (${lat.toFixed(3)}, ${lng.toFixed(3)})`);
+    setCustomOrigin(lat, lng, `Départ (${lat.toFixed(3)}, ${lng.toFixed(3)})`);
     pickingOriginOnMap = false;
-    pickOriginMapBtn.style.background = "#e2e8f0";
-    pickOriginMapBtn.textContent = "🗺️ Cliquer sur carte";
+    pickOriginMapBtn.classList.remove("active");
+    pickOriginMapBtn.textContent = "🗺️ Sur la carte";
     return;
   }
   selectedPOIs.push({
@@ -144,13 +162,13 @@ document.getElementById("route-form").addEventListener("submit", async (e) => {
   statusMsg.textContent = "";
 
   if ((!customOrigin && !stationSelect.value) || selectedPOIs.length === 0) {
-    statusMsg.textContent = "Veuillez choisir un point de départ et au moins une destination (POI).";
+    statusMsg.textContent = "Sélectionnez un point de départ et au moins une destination.";
     return;
   }
 
   const rawDate = document.getElementById("travel-date").value.replaceAll("-", "");
   const depTime = document.getElementById("dep-time").value;
-  const criterion = document.getElementById("criterion").value;
+  const criterion = criterionInput.value;
 
   const payload = {
     pois: selectedPOIs.map((p) => ({
@@ -174,7 +192,7 @@ document.getElementById("route-form").addEventListener("submit", async (e) => {
 
   const submitBtn = document.getElementById("submit-btn");
   submitBtn.disabled = true;
-  submitBtn.textContent = "Calcul en cours...";
+  submitBtn.textContent = "Optimisation en cours...";
 
   try {
     const res = await fetch(`${API_BASE}/route`, {
@@ -199,25 +217,47 @@ document.getElementById("route-form").addEventListener("submit", async (e) => {
 function renderResults(data) {
   const s = data.summary;
   resultsSection.classList.remove("hidden");
+
   let html = `
-    <div class="summary-card">
-      <div><b>Départ :</b> ${s.departure_time} &rarr; <b>Arrivée finale :</b> ${s.final_arrival_time}</div>
-      <div><b>Durée totale :</b> ${s.total_duration_min} min | <b>Correspondances :</b> ${s.total_transfers}</div>
-      <div><b>Distance :</b> ${s.total_distance_km} km</div>
-      <div class="co2-badge">🌱 ${s.total_co2_kg} kg CO₂ (vs ${s.car_co2_kg} kg en voiture — ${s.co2_saved_kg} kg économisés)</div>
+    <div class="kpi-grid">
+      <div class="kpi-card purple">
+        <div class="kpi-val">${s.total_duration_min} min</div>
+        <div class="kpi-lbl">${s.departure_time} → ${s.final_arrival_time}</div>
+      </div>
+      <div class="kpi-card cyan">
+        <div class="kpi-val">${s.total_distance_km} km</div>
+        <div class="kpi-lbl">${s.total_transfers} corresp.</div>
+      </div>
+      <div class="kpi-card coral">
+        <div class="kpi-val">${s.total_co2_kg} kg</div>
+        <div class="kpi-lbl">Empreinte CO₂</div>
+      </div>
+    </div>
+
+    <div class="eco-card">
+      <div>
+        <div class="eco-main">🌱 ${s.co2_saved_kg} kg de CO₂ évités</div>
+        <div class="eco-sub">Contre ${s.car_co2_kg} kg en voiture thermique</div>
+      </div>
+      <span class="eco-pill">-${Math.round((s.co2_saved_kg / Math.max(s.car_co2_kg, 0.1)) * 100)}% CO₂</span>
     </div>
   `;
 
   if (data.initial_walk) {
-    html += `<div class="stage-card"><div class="walk-item">🚶 Marche initiale : ${data.initial_walk.walk_km} km (~${data.initial_walk.walk_min} min) vers <b>${data.initial_walk.to_station}</b></div></div>`;
+    html += `<div class="stage-card"><div class="walk-pill">🚶 Marche initiale : ${data.initial_walk.walk_km} km (~${data.initial_walk.walk_min} min) → ${data.initial_walk.to_station}</div></div>`;
   }
 
   data.stages.forEach((st) => {
-    html += `<div class="stage-card"><strong>Étape ${st.stage} : ${st.poi_name}</strong>`;
+    html += `<div class="stage-card"><div class="stage-title"><span class="step-pill coral">${st.stage}</span>${st.poi_name}</div>`;
     st.rail_legs.forEach((leg) => {
-      html += `<div class="leg-item">${leg.departure} <b>${leg.from_station}</b> &rarr; ${leg.arrival} <b>${leg.to_station}</b> (${leg.mode} · ${leg.co2_g}g CO₂)</div>`;
+      html += `
+        <div class="leg-row">
+          <div><b>${leg.departure}</b> ${leg.from_station} &rarr; <b>${leg.arrival}</b> ${leg.to_station}</div>
+          <div class="leg-meta">${leg.mode} · ${leg.distance_km} km · ${leg.co2_g} g CO₂</div>
+        </div>
+      `;
     });
-    html += `<div class="walk-item">🚶 Marche : ${st.walk_km} km (~${st.walk_min} min) depuis ${st.arrival_station} &rarr; Arrivée ${st.poi_arrival_time}</div></div>`;
+    html += `<div class="walk-pill">🚶 Marche finale : ${st.walk_km} km (~${st.walk_min} min) depuis ${st.arrival_station} · Arrivée ${st.poi_arrival_time}</div></div>`;
   });
 
   resultsSection.innerHTML = html;
@@ -225,21 +265,32 @@ function renderResults(data) {
 
 function renderGeoJSON(geojson) {
   if (routeLayer) map.removeLayer(routeLayer);
-  const colors = { origin: "#16a34a", transfer: "#ea580c", stop: "#2563eb", poi: "#dc2626" };
+  if (originPin) map.removeLayer(originPin);
 
   routeLayer = L.geoJSON(geojson, {
     style: (f) =>
       f.properties.mode === "walk"
-        ? { color: "#dc2626", weight: 4, dashArray: "6, 8" }
-        : { color: "#2563eb", weight: 4 },
-    pointToLayer: (f, latlng) =>
-      L.circleMarker(latlng, {
-        radius: f.properties.role === "stop" ? 5 : 8,
-        fillColor: colors[f.properties.role] || "#2563eb",
-        color: "#fff",
+        ? { color: "#fb7185", weight: 4, dashArray: "6, 8" }
+        : { color: "#6c5dd3", weight: 5 },
+    pointToLayer: (f, latlng) => {
+      const role = f.properties.role;
+      if (role === "origin" || role === "poi") {
+        return L.marker(latlng, {
+          icon: L.divIcon({
+            className: "",
+            html: `<div class="map-callout ${role}"><span class="dot"></span>${f.properties.name}</div>`,
+            iconAnchor: [20, 14],
+          }),
+        });
+      }
+      return L.circleMarker(latlng, {
+        radius: role === "transfer" ? 7 : 5,
+        fillColor: role === "transfer" ? "#f43f5e" : "#6c5dd3",
+        color: "#ffffff",
         weight: 2,
-        fillOpacity: 0.95,
-      }),
+        fillOpacity: 1,
+      });
+    },
     onEachFeature: (f, lyr) => {
       const p = f.properties;
       if (f.geometry.type === "Point") lyr.bindPopup(`<b>${p.name}</b><br/>${p.detail}`);
@@ -248,7 +299,7 @@ function renderGeoJSON(geojson) {
     },
   }).addTo(map);
 
-  map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+  map.fitBounds(routeLayer.getBounds(), { padding: [90, 420] });
 }
 
 loadStations("Bordeaux");

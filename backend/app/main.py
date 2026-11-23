@@ -19,7 +19,7 @@ from app.pois_catalog import CATALOG_POIS
 
 DATA_DIR = Path(os.getenv("GTFS_DATA_DIR", Path(__file__).resolve().parents[2] / "DATA"))
 
-app = FastAPI(title="Gare-Au-POI API", version="1.1.0")
+app = FastAPI(title="Gare-Au-POI API", version="1.2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -144,73 +144,111 @@ def compute_multimodal_route(req: RouteRequest) -> dict:
     dep_str = req.departure_time if len(req.departure_time) == 8 else f"{req.departure_time}:00"
     base_dep_sec = parse_gtfs_time_to_seconds(dep_str)
 
+    # Resolve starting point: either a specific station ID or top-5 nearest stations from GPS/map click
+    origin_candidates: list[tuple] = []
+    if req.origin_station_id:
+        if req.origin_station_id not in network.stations:
+            raise HTTPException(status_code=404, detail="Gare de départ introuvable.")
+        origin_candidates.append((network.stations[req.origin_station_id], 0.0, 0))
+    elif req.origin_lat is not None and req.origin_lon is not None:
+        origin_candidates = find_nearest_stations(network.stations, req.origin_lat, req.origin_lon, top_k=5)
+        if not origin_candidates:
+            raise HTTPException(status_code=404, detail="Aucune gare trouvée à proximité.")
+    else:
+        raise HTTPException(status_code=400, detail="Veuillez indiquer une gare de départ ou une position GPS.")
+
     features: list[dict] = []
     total_distance_km = 0.0
     total_co2_g = 0.0
     total_transfers = 0
     initial_walk_info = None
-
-    # Resolve starting point: either a station ID or user GPS coordinates
-    if req.origin_station_id:
-        if req.origin_station_id not in network.stations:
-            raise HTTPException(status_code=404, detail="Gare de départ introuvable.")
-        current_station = network.stations[req.origin_station_id]
-        current_time_sec = base_dep_sec
-        features.append({
-            "type": "Feature",
-            "geometry": {"type": "Point", "coordinates": [current_station.lon, current_station.lat]},
-            "properties": {"name": current_station.name, "role": "origin", "detail": f"Départ {dep_str[:5]}"},
-        })
-    elif req.origin_lat is not None and req.origin_lon is not None:
-        nearest = find_nearest_stations(network.stations, req.origin_lat, req.origin_lon, top_k=1)
-        if not nearest:
-            raise HTTPException(status_code=404, detail="Aucune gare trouvée à proximité.")
-        current_station, walk_km, walk_sec = nearest[0]
-        current_time_sec = base_dep_sec + walk_sec
-        total_distance_km += walk_km
-        initial_walk_info = {
-            "from": req.origin_label,
-            "to_station": current_station.name,
-            "walk_km": round(walk_km, 2),
-            "walk_min": walk_sec // 60,
-        }
-        features.append({
-            "type": "Feature",
-            "geometry": {"type": "Point", "coordinates": [req.origin_lon, req.origin_lat]},
-            "properties": {"name": req.origin_label, "role": "origin", "detail": f"Position de départ ({dep_str[:5]})"},
-        })
-        features.append({
-            "type": "Feature",
-            "geometry": {"type": "LineString", "coordinates": [[req.origin_lon, req.origin_lat], [current_station.lon, current_station.lat]]},
-            "properties": {"mode": "walk", "from": req.origin_label, "to": current_station.name, "distance_km": round(walk_km, 2), "duration_min": walk_sec // 60},
-        })
-    else:
-        raise HTTPException(status_code=400, detail="Veuillez indiquer une gare de départ ou une position GPS.")
-
     stages: list[dict] = []
-    journey_start_sec: int | None = base_dep_sec if initial_walk_info else None
+
+    current_station = None
+    current_time_sec = base_dep_sec
+    journey_start_sec: int | None = None
 
     for stage_idx, poi in enumerate(req.pois):
-        candidates = find_nearest_stations(network.stations, poi.lat, poi.lon, top_k=3)
+        start_pool = origin_candidates if stage_idx == 0 else [(current_station, 0.0, 0)]
+        dest_candidates = find_nearest_stations(network.stations, poi.lat, poi.lon, top_k=5)
         best_choice = None
 
-        for dest_st, walk_km, walk_sec in candidates:
-            legs = optimize_legs_by_criterion(
-                network, current_station.station_id, dest_st.station_id, current_time_sec, req.criterion
-            )
-            if legs is None:
-                continue
-            arr_at_poi = (legs[-1][1].arr_sec if legs else current_time_sec) + walk_sec
-            if best_choice is None or arr_at_poi < best_choice[0]:
-                best_choice = (arr_at_poi, dest_st, walk_km, walk_sec, legs)
+        for orig_st, init_walk_km, init_walk_sec in start_pool:
+            dep_after_walk = current_time_sec + init_walk_sec
+            for dest_st, walk_km, walk_sec in dest_candidates:
+                legs = optimize_legs_by_criterion(
+                    network, orig_st.station_id, dest_st.station_id, dep_after_walk, req.criterion
+                )
+                if legs is None:
+                    continue
+                arr_at_poi = (legs[-1][1].arr_sec if legs else dep_after_walk) + walk_sec
+                if best_choice is None or arr_at_poi < best_choice[0]:
+                    best_choice = (
+                        arr_at_poi,
+                        orig_st,
+                        init_walk_km,
+                        init_walk_sec,
+                        dest_st,
+                        walk_km,
+                        walk_sec,
+                        legs,
+                    )
 
         if best_choice is None:
+            origin_name = (
+                req.origin_label
+                if (stage_idx == 0 and req.origin_lat is not None)
+                else start_pool[0][0].name
+            )
             raise HTTPException(
                 status_code=404,
-                detail=f"Aucun horaire ferroviaire trouvé entre {current_station.name} et {poi.name} le {req.date}.",
+                detail=f"Aucun horaire ferroviaire trouvé entre {origin_name} et {poi.name} le {req.date}.",
             )
 
-        arr_at_poi, dest_st, walk_km, walk_sec, legs = best_choice
+        arr_at_poi, chosen_orig_st, init_walk_km, init_walk_sec, dest_st, walk_km, walk_sec, legs = best_choice
+
+        # Record origin point (and initial walk if started from GPS / map click) on stage 0
+        if stage_idx == 0:
+            if req.origin_lat is not None and req.origin_lon is not None:
+                total_distance_km += init_walk_km
+                journey_start_sec = base_dep_sec
+                initial_walk_info = {
+                    "from": req.origin_label,
+                    "to_station": chosen_orig_st.name,
+                    "walk_km": round(init_walk_km, 2),
+                    "walk_min": init_walk_sec // 60,
+                }
+                features.append({
+                    "type": "Feature",
+                    "geometry": {"type": "Point", "coordinates": [req.origin_lon, req.origin_lat]},
+                    "properties": {"name": req.origin_label, "role": "origin", "detail": f"Départ ({dep_str[:5]})"},
+                })
+                features.append({
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": [[req.origin_lon, req.origin_lat], [chosen_orig_st.lon, chosen_orig_st.lat]],
+                    },
+                    "properties": {
+                        "mode": "walk",
+                        "from": req.origin_label,
+                        "to": chosen_orig_st.name,
+                        "distance_km": round(init_walk_km, 2),
+                        "duration_min": init_walk_sec // 60,
+                    },
+                })
+                features.append({
+                    "type": "Feature",
+                    "geometry": {"type": "Point", "coordinates": [chosen_orig_st.lon, chosen_orig_st.lat]},
+                    "properties": {"name": chosen_orig_st.name, "role": "stop", "detail": "Gare de départ"},
+                })
+            else:
+                features.append({
+                    "type": "Feature",
+                    "geometry": {"type": "Point", "coordinates": [chosen_orig_st.lon, chosen_orig_st.lat]},
+                    "properties": {"name": chosen_orig_st.name, "role": "origin", "detail": f"Départ {dep_str[:5]}"},
+                })
+
         stage_legs_out = []
         prev_trip: str | None = None
 
